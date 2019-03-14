@@ -74,7 +74,7 @@ namespace pangolin {
 
 			eglQueryDevicesEXT(MAX_DEVICES, eglDevs, &numDevices);
 
-			printf(“Detected %d devices\n”, numDevices);
+			printf("Detected %d devices\n", numDevices);
 
 			PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT =
 				(PFNEGLGETPLATFORMDISPLAYEXTPROC)
