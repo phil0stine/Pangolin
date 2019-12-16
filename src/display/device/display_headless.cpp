@@ -80,18 +80,18 @@ namespace pangolin {
 				(PFNEGLGETPLATFORMDISPLAYEXTPROC)
 				eglGetProcAddress("eglGetPlatformDisplayEXT");
 
-			egl_display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, 
-																						 eglDevs[0], 0);
-			//egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-			if(!egl_display) {
-        std::cerr << "Failed to open EGL display" << std::endl;
-			}
+      egl_display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, 
+                                             eglDevs[0], 0);
+      if(!egl_display) {
+        std::cerr << "Failed to open EGL Platform display" << std::endl;
+        egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        if(!egl_display) std::cerr << "Failed to open EGL default display" << std::endl;
+      }
 
-			EGLint major, minor;
-			if(eglInitialize(egl_display, &major, &minor)==EGL_FALSE) {
+      EGLint major, minor;
+      if(eglInitialize(egl_display, &major, &minor)==EGL_FALSE) {
         std::cerr << "EGL init failed" << std::endl;
-			}
-
+      }
 			if(eglBindAPI(EGL_OPENGL_API)==EGL_FALSE) {
         std::cerr << "EGL bind failed" << std::endl;
 			}
