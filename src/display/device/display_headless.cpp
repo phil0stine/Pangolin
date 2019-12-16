@@ -83,7 +83,7 @@ namespace pangolin {
       egl_display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, 
                                              eglDevs[0], 0);
       if(!egl_display) {
-        std::cerr << "Failed to open EGL Platform display" << std::endl;
+        std::cerr << "Failed to open EGL Platform display, trying default display" << std::endl;
         egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
         if(!egl_display) std::cerr << "Failed to open EGL default display" << std::endl;
       }
