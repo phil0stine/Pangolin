@@ -5,28 +5,28 @@
 
 namespace pangolin {
 
-	extern __thread PangolinGl* context;
+  extern __thread PangolinGl* context;
 
-	namespace headless {
+  namespace headless {
 
-		class EGLDisplayHL {
-		public:
-			EGLDisplayHL(const int width, const int height);
+    class EGLDisplayHL {
+    public:
+      EGLDisplayHL(const int width, const int height);
 
-			~EGLDisplayHL();
+      ~EGLDisplayHL();
 
-			void swap();
+      void swap();
 
-			void makeCurrent();
+      void makeCurrent();
 
-			void removeCurrent();
+      void removeCurrent();
 
-		private:
-			EGLSurface egl_surface;
-			EGLContext egl_context;
-			EGLDisplay egl_display;
+    private:
+      EGLSurface egl_surface;
+      EGLContext egl_context;
+      EGLDisplay egl_display;
 
-			static constexpr EGLint attribs[] = {
+      static constexpr EGLint attribs[] = {
         EGL_SURFACE_TYPE    , EGL_PBUFFER_BIT,
         EGL_RENDERABLE_TYPE , EGL_OPENGL_BIT,
         EGL_RED_SIZE        , 8,
@@ -36,49 +36,49 @@ namespace pangolin {
         EGL_DEPTH_SIZE      , 24,
         EGL_STENCIL_SIZE    , 8,
         EGL_NONE
-			};
-		};
+      };
+    };
 
-		constexpr EGLint EGLDisplayHL::attribs[];
+    constexpr EGLint EGLDisplayHL::attribs[];
 
-		struct HeadlessWindow : public PangolinGl {
-			HeadlessWindow(const int width, const int height);
+    struct HeadlessWindow : public PangolinGl {
+      HeadlessWindow(const int width, const int height);
 
-			~HeadlessWindow() override;
+      ~HeadlessWindow() override;
 
-			void ToggleFullscreen() override;
+      void ToggleFullscreen() override;
 
-			void Move(const int x, const int y) override;
+      void Move(const int x, const int y) override;
 
-			void Resize(const unsigned int w, const unsigned int h) override;
+      void Resize(const unsigned int w, const unsigned int h) override;
 
-			void MakeCurrent() override;
+      void MakeCurrent() override;
 
-			void RemoveCurrent() override;
+      void RemoveCurrent() override;
 
-			void SwapBuffers() override;
+      void SwapBuffers() override;
 
-			void ProcessEvents() override;
+      void ProcessEvents() override;
 
-			EGLDisplayHL display;
-		};
+      EGLDisplayHL display;
+    };
 
-		EGLDisplayHL::EGLDisplayHL(const int width, const int height) {
-			static const int MAX_DEVICES = 4;
-			EGLDeviceEXT eglDevs[MAX_DEVICES];
-			EGLint numDevices;
+    EGLDisplayHL::EGLDisplayHL(const int width, const int height) {
+      static const int MAX_DEVICES = 4;
+      EGLDeviceEXT eglDevs[MAX_DEVICES];
+      EGLint numDevices;
 
-			PFNEGLQUERYDEVICESEXTPROC eglQueryDevicesEXT =
-				(PFNEGLQUERYDEVICESEXTPROC)
-				eglGetProcAddress("eglQueryDevicesEXT");
+      PFNEGLQUERYDEVICESEXTPROC eglQueryDevicesEXT =
+        (PFNEGLQUERYDEVICESEXTPROC)
+        eglGetProcAddress("eglQueryDevicesEXT");
 
-			eglQueryDevicesEXT(MAX_DEVICES, eglDevs, &numDevices);
+      eglQueryDevicesEXT(MAX_DEVICES, eglDevs, &numDevices);
 
-			printf("Detected %d devices\n", numDevices);
+      printf("Detected %d devices\n", numDevices);
 
-			PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT =
-				(PFNEGLGETPLATFORMDISPLAYEXTPROC)
-				eglGetProcAddress("eglGetPlatformDisplayEXT");
+      PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT =
+        (PFNEGLGETPLATFORMDISPLAYEXTPROC)
+        eglGetProcAddress("eglGetPlatformDisplayEXT");
 
       egl_display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, 
                                              eglDevs[0], 0);
@@ -92,94 +92,94 @@ namespace pangolin {
       if(eglInitialize(egl_display, &major, &minor)==EGL_FALSE) {
         std::cerr << "EGL init failed" << std::endl;
       }
-			if(eglBindAPI(EGL_OPENGL_API)==EGL_FALSE) {
+      if(eglBindAPI(EGL_OPENGL_API)==EGL_FALSE) {
         std::cerr << "EGL bind failed" << std::endl;
-			}
+      }
 
-			EGLint count;
-			eglGetConfigs(egl_display, nullptr, 0, &count);
+      EGLint count;
+      eglGetConfigs(egl_display, nullptr, 0, &count);
 
-			std::vector<EGLConfig> egl_configs(count);
+      std::vector<EGLConfig> egl_configs(count);
 
-			EGLint numConfigs;
-			eglChooseConfig(egl_display, attribs, egl_configs.data(), count, &numConfigs);
+      EGLint numConfigs;
+      eglChooseConfig(egl_display, attribs, egl_configs.data(), count, &numConfigs);
 
-			egl_context = eglCreateContext(egl_display, egl_configs[0], EGL_NO_CONTEXT, nullptr);
+      egl_context = eglCreateContext(egl_display, egl_configs[0], EGL_NO_CONTEXT, nullptr);
 
-			const EGLint pbufferAttribs[] = {
+      const EGLint pbufferAttribs[] = {
         EGL_WIDTH, width,
         EGL_HEIGHT, height,
         EGL_NONE,
-			};
-			egl_surface = eglCreatePbufferSurface(egl_display, egl_configs[0],  pbufferAttribs);
-			if (egl_surface == EGL_NO_SURFACE) {
+      };
+      egl_surface = eglCreatePbufferSurface(egl_display, egl_configs[0],  pbufferAttribs);
+      if (egl_surface == EGL_NO_SURFACE) {
         std::cerr << "Cannot create EGL surface" << std::endl;
-			}
-		}
+      }
+    }
 
-		EGLDisplayHL::~EGLDisplayHL() {
-			if(egl_context) eglDestroyContext(egl_display, egl_context);
-			if(egl_surface) eglDestroySurface(egl_display, egl_surface);
-			if(egl_display) eglTerminate(egl_display);
-		}
+    EGLDisplayHL::~EGLDisplayHL() {
+      if(egl_context) eglDestroyContext(egl_display, egl_context);
+      if(egl_surface) eglDestroySurface(egl_display, egl_surface);
+      if(egl_display) eglTerminate(egl_display);
+    }
 
-		void EGLDisplayHL::swap() {
-			eglSwapBuffers(egl_display, egl_surface);
-		}
+    void EGLDisplayHL::swap() {
+      eglSwapBuffers(egl_display, egl_surface);
+    }
 
-		void EGLDisplayHL::makeCurrent() {
-			eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
-		}
+    void EGLDisplayHL::makeCurrent() {
+      eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+    }
 
-		void EGLDisplayHL::removeCurrent() {
-			eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-		}
+    void EGLDisplayHL::removeCurrent() {
+      eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
 
-		HeadlessWindow::HeadlessWindow(const int w, const int h) : display(w, h) {
-			windowed_size[0] = w;
-			windowed_size[1] = h;
-		}
+    HeadlessWindow::HeadlessWindow(const int w, const int h) : display(w, h) {
+      windowed_size[0] = w;
+      windowed_size[1] = h;
+    }
 
-		HeadlessWindow::~HeadlessWindow() { }
+    HeadlessWindow::~HeadlessWindow() { }
 
-		void HeadlessWindow::MakeCurrent() {
-			display.makeCurrent();
-			context = this;
-		}
+    void HeadlessWindow::MakeCurrent() {
+      display.makeCurrent();
+      context = this;
+    }
 
-		void HeadlessWindow::RemoveCurrent() {
-			display.removeCurrent();
-		}
+    void HeadlessWindow::RemoveCurrent() {
+      display.removeCurrent();
+    }
 
-		void HeadlessWindow::ToggleFullscreen() { }
+    void HeadlessWindow::ToggleFullscreen() { }
 
-		void HeadlessWindow::Move(const int /*x*/, const int /*y*/) { }
+    void HeadlessWindow::Move(const int /*x*/, const int /*y*/) { }
 
-		void HeadlessWindow::Resize(const unsigned int /*w*/, const unsigned int /*h*/) { }
+    void HeadlessWindow::Resize(const unsigned int /*w*/, const unsigned int /*h*/) { }
 
-		void HeadlessWindow::ProcessEvents() { }
+    void HeadlessWindow::ProcessEvents() { }
 
-		void HeadlessWindow::SwapBuffers() {
-			display.swap();
-			MakeCurrent();
-		}
+    void HeadlessWindow::SwapBuffers() {
+      display.swap();
+      MakeCurrent();
+    }
 
-	} // namespace headless
+  } // namespace headless
 
-	PANGOLIN_REGISTER_FACTORY(NoneWindow) {
-		struct HeadlessWindowFactory : public FactoryInterface<WindowInterface> {
-			std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
+  PANGOLIN_REGISTER_FACTORY(NoneWindow) {
+    struct HeadlessWindowFactory : public FactoryInterface<WindowInterface> {
+      std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
         return std::unique_ptr<WindowInterface>(new headless::HeadlessWindow(uri.Get<int>("w", 640), uri.Get<int>("h", 480)));
-			}
+      }
 
-			virtual ~HeadlessWindowFactory() { }
-		};
+      virtual ~HeadlessWindowFactory() { }
+    };
 
-		auto factory = std::make_shared<HeadlessWindowFactory>();
-		FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 1, "none");
-		FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 1, "nogui");
-		FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 1, "headless");
-	}
+    auto factory = std::make_shared<HeadlessWindowFactory>();
+    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 1, "none");
+    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 1, "nogui");
+    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 1, "headless");
+  }
 
 } // namespace pangolin
 
